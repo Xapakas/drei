@@ -1,0 +1,8 @@
+circle {
+  stroke: black;
+  stroke-width: 2;
+}
+
+div.info {
+  font-size: 25px;
+}

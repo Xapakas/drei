@@ -10,9 +10,9 @@ function(err){
 var drawScatter = function(data){
   console.log(data);
 
-  var width = 1000
+  var width = 800
 
-  var height = 700
+  var height = 600
 
   var svg = d3.select("svg")
           .attr("width", width)
@@ -30,13 +30,13 @@ var drawScatter = function(data){
     return d.Economy;
   }));
 
-  console.log(xMin)
+  // console.log(xMin)
 
   var xMax = d3.max(data.map(function(d){
     return d.Economy;
   }));
 
-  console.log(xMax)
+  // console.log(xMax)
 
   var xScale = d3.scaleLinear() // GDP Per Capita
                  .domain([xMin,xMax])
@@ -59,26 +59,65 @@ var drawScatter = function(data){
 
   var colorMin = d3.min(data.map(function(d){
     return d.Health;
-  }))
+  }));
 
   var colorMax = d3.max(data.map(function(d){
     return d.Health;
-  }))
+  }));
 
-  console.log(colorMin,colorMax)
+  // console.log(colorMin,colorMax);
 
   var colorScale = d3.scaleLinear()
                      .domain([colorMin,colorMax])
-                     .range(["red","green"])
+                     .range(["red","green"]);
+
+  var sizeMin = d3.min(data.map(function(d){
+    return d.Freedom;
+  }));
+
+  var sizeMax = d3.max(data.map(function(d){
+    return d.Freedom;
+  }));
+
+  var sizeScale = d3.scaleLinear()
+                    .domain([sizeMin,sizeMax])
+                    .range([5,15]);
+
+  var div = d3.select(".info")
+              .style("display","none")
 
   svg.selectAll("circle")
     .data(data)
     .enter()
     .append("circle")
-    .attr("cx",function(d){console.log(xScale(d.Economy)); return xScale(d.Economy);})
+    .attr("cx",function(d){return xScale(d.Economy);})
     .attr("cy",function(d){return yScale(d.HappinessScore);})
-    .attr("r",5)
-    .attr("fill",function(d){return colorScale(d.Health)});
+    .attr("r",function(d){return sizeScale(d.Freedom)})
+    .attr("fill",function(d){return colorScale(d.Health)})
+    .attr("opacity",0.7)
+    .on("mouseover",function(d){
+      d3.selectAll("circle")
+        .transition()
+        .duration(400)
+        .attr("opacity", 0.2);
+
+      d3.select(this)
+        .transition()
+        .duration(400)
+        .attr("opacity", 1);
+
+      div.html(d.Country + ": <br> Happiness Score: " + d.HappinessScore +
+               "<br> GDP Per Capita: " + d.Economy +
+               "<br> Health (Life Expectancy): " + d.Health +
+               "<br> Freedom: " + d.Freedom)
+         .style("display","inline-block");
+    })
+    .on("mouseout",function(d){
+      d3.selectAll("circle")
+        .transition()
+        .duration(200)
+        .attr("opacity", 0.7);
+    })
 
   var xAxis = d3.axisBottom()
                 .scale(xScale);
