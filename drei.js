@@ -10,9 +10,9 @@ function(err){
 var drawScatter = function(data){
   console.log(data);
 
-  var width = 800
+  var width = 800;
 
-  var height = 600
+  var height = 600;
 
   var svg = d3.select("svg")
           .attr("width", width)
@@ -104,9 +104,11 @@ var drawScatter = function(data){
       d3.select(this)
         .transition()
         .duration(400)
+        .attr("r",function(d){return 1.5 * sizeScale(d.Freedom)})
         .attr("opacity", 1);
 
-      div.html(d.Country + ": <br> Happiness Score: " + d.HappinessScore +
+      div.html("<b>" + d.Country + "</b>" +
+               "<br> Happiness Score: " + d.HappinessScore +
                "<br> GDP Per Capita: " + d.Economy +
                "<br> Health (Life Expectancy): " + d.Health +
                "<br> Freedom: " + d.Freedom)
@@ -116,6 +118,7 @@ var drawScatter = function(data){
       d3.selectAll("circle")
         .transition()
         .duration(200)
+        .attr("r",function(d){return sizeScale(d.Freedom)})
         .attr("opacity", 0.7);
     })
 
@@ -135,4 +138,56 @@ var drawScatter = function(data){
      .attr("transform", "translate(" + padding.left + ",0)")
      .call(yAxis);
 
+  buttonUpdate(data)
+}
+
+var buttonUpdate = function(data){
+  d3.select("#colorblindButton")
+    .on("click",function(d){
+      d3.select("#colorblindButton")
+        .attr("id","unblindButton")
+        .html("Never Mind")
+      recolorFunction(data,"orange","blue");
+    });
+
+  d3.select("#unblindButton")
+    .on("click",function(d){
+      d3.select("#unblindButton")
+        .attr("id","colorblindButton")
+        .html("I'm color blind")
+
+      recolorFunction(data,"red","green")
+    })
+}
+
+var recolorFunction = function(data,color1,color2){
+
+  var colorMin = d3.min(data.map(function(d){
+    return d.Health;
+  }));
+
+  var colorMax = d3.max(data.map(function(d){
+    return d.Health;
+  }));
+
+  var colorblindScale = d3.scaleLinear()
+                     .domain([colorMin,colorMax])
+                     .range([color1,color2]);
+
+  d3.selectAll("circle")
+    .data(data)
+    .attr("fill",function(d){return colorblindScale(d.Health);});
+
+  // d3.select("button")
+  //   .attr("id",function(d){
+  //     if (this.id == "colorblindButton"){
+  //       return "unblindbutton";
+  //     }
+  //     else {
+  //       return "colorblindButton";
+  //     }
+  //   })
+  //   .html("Never mind");
+
+  buttonUpdate(data);
 }
