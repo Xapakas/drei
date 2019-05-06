@@ -1,3 +1,39 @@
+body {
+  background-color: #e8ecd6;
+  font-style: sans-serif;
+}
+
+h1 {
+  font-size: 35px;
+}
+
+button {
+  color: #fdfff0;
+  padding: 10px 10px;
+  font-size: 16px;
+}
+
+.year {
+  background-color: #a1dd70;
+  font-size: 20px;
+}
+
+.region {
+  background-color: #a23131;
+}
+
+.colorblind {
+  background-color: #4aa6b5;
+}
+
+div.forms h3, div.forms form {
+  display: inline;
+}
+
+form {
+  margin-right: 10px;
+}
+
 circle {
   stroke: black;
   stroke-width: 2;
@@ -5,4 +41,8 @@ circle {
 
 div.info {
   font-size: 25px;
+  border: 3px solid black;
+  border-radius: 10px;
+  padding: 5px;
+  margin-bottom: 10px;
 }

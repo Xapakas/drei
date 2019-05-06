@@ -15,25 +15,26 @@ var padding = {
   bottom: 20
 };
 
+var values = ["HappinessScore","Economy","Family","Health","Freedom","Generosity","TrustIng"]
+
 Promise.all([data2015,data2016,data2017]).then(function(data){
-  drawScatter(data[0]);
-  buttonUpdate(data,data[0]);
+  var xVariable = "Economy"
+  var yVariable = "HappinessScore"
+  var colorVariable = "Health"
+  var sizeVariable = "Freedom"
+  drawScatter(data[0],xVariable,yVariable,colorVariable,sizeVariable);
+  buttonUpdate(data,data[0],xVariable,yVariable,colorVariable,sizeVariable);
 },
 function(err){
   console.log(err);
 });
 
-var drawScatter = function(data){
+var drawScatter = function(data,xVariable,yVariable,colorVariable,sizeVariable){
   console.log(data);
 
   var svg = d3.select("svg")
           .attr("width", width)
           .attr("height", height);
-
-  var xVariable = "Economy"
-  var yVariable = "HappinessScore"
-  var colorVariable = "Health"
-  var sizeVariable = "Freedom"
 
   var xMin = d3.min(data.map(function(d){
     // console.log(d)
@@ -54,11 +55,11 @@ var drawScatter = function(data){
 
   var yMin = d3.min(data.map(function(d){
     // console.log(d)
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   var yMax = d3.max(data.map(function(d){
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   // console.log(yMin, yMax)
@@ -68,11 +69,11 @@ var drawScatter = function(data){
                  .range([height - padding.bottom, padding.top]);
 
   var colorMin = d3.min(data.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorMax = d3.max(data.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   // console.log(colorMin,colorMax);
@@ -82,11 +83,11 @@ var drawScatter = function(data){
                      .range(["red","green"]);
 
   var sizeMin = d3.min(data.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeMax = d3.max(data.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeScale = d3.scaleLinear()
@@ -100,10 +101,10 @@ var drawScatter = function(data){
     .data(data)
     .enter()
     .append("circle")
-    .attr("cx",function(d){return xScale(d.Economy);})
-    .attr("cy",function(d){return yScale(d.HappinessScore);})
-    .attr("r",function(d){return sizeScale(d.Freedom)})
-    .attr("fill",function(d){return colorScale(d.Health)})
+    .attr("cx",function(d){return xScale(d[xVariable]);})
+    .attr("cy",function(d){return yScale(d[yVariable]);})
+    .attr("r",function(d){return sizeScale(d[sizeVariable])})
+    .attr("fill",function(d){return colorScale(d[colorVariable])})
     .attr("opacity",0.7)
     .attr("id",function(d){return d.Country})
     .attr("classed",function(d){return d.Region})
@@ -116,21 +117,21 @@ var drawScatter = function(data){
       d3.select(this)
         .transition()
         .duration(400)
-        .attr("r",function(d){return 1.5 * sizeScale(d.Freedom)})
+        .attr("r",function(d){return 1.5 * sizeScale(d[sizeVariable])})
         .attr("opacity", 1);
 
       div.html("<b>" + d.Country + "</b>" +
-               "<br> Happiness Score: " + d.HappinessScore +
-               "<br> GDP Per Capita: " + d.Economy +
-               "<br> Health (Life Expectancy): " + d.Health +
-               "<br> Freedom: " + d.Freedom)
+               "<br> Happiness Score: " + d[yVariable] +
+               "<br> GDP Per Capita: " + d[xVariable] +
+               "<br> Health (Life Expectancy): " + d[colorVariable] +
+               "<br> Freedom: " + d[sizeVariable])
          .style("display","inline-block");
     })
     .on("mouseout",function(d){
       d3.selectAll("circle")
         .transition()
         .duration(200)
-        .attr("r",function(d){return sizeScale(d.Freedom)})
+        .attr("r",function(d){return sizeScale(d[sizeVariable])})
         .attr("opacity", 0.7);
     })
 
@@ -151,13 +152,13 @@ var drawScatter = function(data){
      .call(yAxis);
 }
 
-var buttonUpdate = function(data,currentData,currentRegion){
+var buttonUpdate = function(data,currentData,xVariable,yVariable,colorVariable,sizeVariable,currentRegion){
   d3.select("#colorblindButton")
     .on("click",function(d){
       d3.select("#colorblindButton")
         .attr("id","unblindButton")
         .html("Never Mind")
-      recolorFunction(data,currentData,"orange","blue");
+      recolorFunction(data,currentData,xVariable,yVariable,colorVariable,sizeVariable,"orange","blue");
     });
 
   d3.select("#unblindButton")
@@ -166,37 +167,37 @@ var buttonUpdate = function(data,currentData,currentRegion){
         .attr("id","colorblindButton")
         .html("I'm color blind")
 
-      recolorFunction(data,currentData,"red","green")
+      recolorFunction(data,currentData,xVariable,yVariable,colorVariable,sizeVariable,"red","green")
     })
 
   d3.selectAll(".region")
     .on("click",function(d){
-      showRegion(data,this.id,currentData,currentRegion)});
+      showRegion(data,this.id,currentData,xVariable,yVariable,colorVariable,sizeVariable,currentRegion)});
 
   d3.select("#Button2015")
     .on("click",function(d){
-      drawUpdate(data,data[0])
+      drawUpdate(data,data[0],xVariable,yVariable,colorVariable,sizeVariable)
     })
 
   d3.select("#Button2016")
     .on("click",function(d){
-      drawUpdate(data,data[1])
+      drawUpdate(data,data[1],xVariable,yVariable,colorVariable,sizeVariable)
     })
 
   d3.select("#Button2017")
     .on("click",function(d){
-      drawUpdate(data,data[2])
+      drawUpdate(data,data[2],xVariable,yVariable,colorVariable,sizeVariable)
     })
 }
 
-var showRegion = function(data,id,currentData,currentRegion){
+var showRegion = function(data,id,currentData,xVariable,yVariable,colorVariable,sizeVariable,currentRegion){
 
   var xMin = d3.min(currentData.map(function(d){
-    return d.Economy;
+    return d[xVariable];
   }));
 
   var xMax = d3.max(currentData.map(function(d){
-    return d.Economy;
+    return d[xVariable];
   }));
 
   var xScale = d3.scaleLinear() // GDP Per Capita
@@ -204,11 +205,11 @@ var showRegion = function(data,id,currentData,currentRegion){
                  .range([padding.left, width - padding.right]);
 
   var yMin = d3.min(currentData.map(function(d){
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   var yMax = d3.max(currentData.map(function(d){
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   var yScale = d3.scaleLinear()
@@ -216,11 +217,11 @@ var showRegion = function(data,id,currentData,currentRegion){
                  .range([height - padding.bottom, padding.top]);
 
   var colorMin = d3.min(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorMax = d3.max(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorScale = d3.scaleLinear()
@@ -228,11 +229,11 @@ var showRegion = function(data,id,currentData,currentRegion){
                      .range(["red","green"]);
 
   var sizeMin = d3.min(currentData.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeMax = d3.max(currentData.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeScale = d3.scaleLinear()
@@ -254,18 +255,18 @@ var showRegion = function(data,id,currentData,currentRegion){
         return 0.2
         }})
     .attr("r",function(d){
-      if (d.Region == currentRegion){return sizeScale(d.Freedom)}
-      else if (d.Region == id){return sizeScale(d.Freedom) * 1.5}
-      else{return sizeScale(d.Freedom)}})
+      if (d.Region == currentRegion){return sizeScale(d[sizeVariable])}
+      else if (d.Region == id){return sizeScale(d[sizeVariable]) * 1.5}
+      else{return sizeScale(d[sizeVariable])}})
 
   d3.selectAll("circle")
     .data(currentData)
     .append("text")
     .attr("x",function(d){
-      if (d.Region == id && d.Region != currentRegion){return xScale(d.Economy)}
+      if (d.Region == id && d.Region != currentRegion){return xScale(d[xVariable])}
     })
     .attr("y",function(d){
-      if (d.Region == id && d.Region != currentRegion){return yScale(d.HappinessScore)}
+      if (d.Region == id && d.Region != currentRegion){return yScale(d[yVariable])}
     })
     .text(function(d){return d.Country});
 
@@ -276,17 +277,17 @@ var showRegion = function(data,id,currentData,currentRegion){
     var currentRegion = id;
   }
 
-  buttonUpdate(data,currentData,currentRegion)
+  buttonUpdate(data,currentData,xVariable,yVariable,colorVariable,sizeVariable,currentRegion)
 }
 
-var recolorFunction = function(data,currentData,color1,color2){
+var recolorFunction = function(data,currentData,xVariable,yVariable,colorVariable,sizeVariable,color1,color2){
 
   var colorMin = d3.min(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorMax = d3.max(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorblindScale = d3.scaleLinear()
@@ -297,7 +298,7 @@ var recolorFunction = function(data,currentData,color1,color2){
     .data(currentData)
     .transition()
     .duration(500)
-    .attr("fill",function(d){return colorblindScale(d.Health);});
+    .attr("fill",function(d){return colorblindScale(d[colorVariable]);});
 
   // d3.select("button")
   //   .attr("id",function(d){
@@ -310,23 +311,23 @@ var recolorFunction = function(data,currentData,color1,color2){
   //   })
   //   .html("Never mind");
 
-  buttonUpdate(data,currentData);
+  buttonUpdate(data,currentData,xVariable,yVariable,colorVariable,sizeVariable);
 }
 
-var drawUpdate = function(data,currentData){
+var drawUpdate = function(data,currentData,xVariable,yVariable,colorVariable,sizeVariable){
   // console.log(currentData)
 
   var svg = d3.select("svg");
 
   var xMin = d3.min(currentData.map(function(d){
     // console.log(d)
-    return d.Economy;
+    return d[xVariable];
   }));
 
   // console.log(xMin)
 
   var xMax = d3.max(currentData.map(function(d){
-    return d.Economy;
+    return d[xVariable];
   }));
 
   // console.log(xMax)
@@ -337,11 +338,11 @@ var drawUpdate = function(data,currentData){
 
   var yMin = d3.min(currentData.map(function(d){
     // console.log(d)
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   var yMax = d3.max(currentData.map(function(d){
-    return d.HappinessScore;
+    return d[yVariable];
   }));
 
   // console.log(yMin, yMax)
@@ -351,11 +352,11 @@ var drawUpdate = function(data,currentData){
                  .range([height - padding.bottom, padding.top]);
 
   var colorMin = d3.min(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   var colorMax = d3.max(currentData.map(function(d){
-    return d.Health;
+    return d[colorVariable];
   }));
 
   // console.log(colorMin,colorMax);
@@ -365,11 +366,11 @@ var drawUpdate = function(data,currentData){
                      .range(["red","green"]);
 
   var sizeMin = d3.min(currentData.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeMax = d3.max(currentData.map(function(d){
-    return d.Freedom;
+    return d[sizeVariable];
   }));
 
   var sizeScale = d3.scaleLinear()
@@ -385,10 +386,10 @@ var drawUpdate = function(data,currentData){
      .transition()
      .duration(600)
      .ease(d3.easeCubicInOut)
-     .attr("cx",function(d){return xScale(d.Economy);})
-     .attr("cy",function(d){return yScale(d.HappinessScore);})
-     .attr("r",function(d){return sizeScale(d.Freedom)})
-     .attr("fill",function(d){return colorScale(d.Health)});
+     .attr("cx",function(d){return xScale(d[xVariable]);})
+     .attr("cy",function(d){return yScale(d[yVariable]);})
+     .attr("r",function(d){return sizeScale(d[sizeVariable])})
+     .attr("fill",function(d){return colorScale(d[colorVariable])});
 
   var newDots = svg.selectAll("circle")
                    .data(currentData,function(d){return d.Country})
@@ -404,31 +405,31 @@ var drawUpdate = function(data,currentData){
                      d3.select(this)
                        .transition()
                        .duration(400)
-                       .attr("r",function(d){return 1.5 * sizeScale(d.Freedom)})
+                       .attr("r",function(d){return 1.5 * sizeScale(d[sizeVariable])})
                        .attr("opacity", 1);
 
                      div.html("<b>" + d.Country + "</b>" +
-                              "<br> Happiness Score: " + d.HappinessScore +
-                              "<br> GDP Per Capita: " + d.Economy +
-                              "<br> Health (Life Expectancy): " + d.Health +
-                              "<br> Freedom: " + d.Freedom)
+                              "<br> Happiness Score: " + d[yVariable] +
+                              "<br> GDP Per Capita: " + d[xVariable] +
+                              "<br> Health (Life Expectancy): " + d[colorVariable] +
+                              "<br> Freedom: " + d[sizeVariable])
                         .style("display","inline-block");
                    })
                    .on("mouseout",function(d){
                      d3.selectAll("circle")
                        .transition()
                        .duration(200)
-                       .attr("r",function(d){return sizeScale(d.Freedom)})
+                       .attr("r",function(d){return sizeScale(d[sizeVariable])})
                        .attr("opacity", 0.7);
                    });
 
   newDots.transition()
          .duration(600)
          .ease(d3.easeCubicInOut)
-         .attr("cx",function(d){return xScale(d.Economy);})
-         .attr("cy",function(d){return yScale(d.HappinessScore);})
-         .attr("r",function(d){return sizeScale(d.Freedom)})
-         .attr("fill",function(d){return colorScale(d.Health)})
+         .attr("cx",function(d){return xScale(d[xVariable]);})
+         .attr("cy",function(d){return yScale(d[yVariable]);})
+         .attr("r",function(d){return sizeScale(d[sizeVariable])})
+         .attr("fill",function(d){return colorScale(d[colorVariable])})
          .attr("opacity",0.7)
          .attr("id",function(d){return d.Country})
          .attr("classed",function(d){return d.Region});
@@ -442,5 +443,5 @@ var drawUpdate = function(data,currentData){
      .attr("opacity",0)
      .remove();
 
-  buttonUpdate(data,currentData);
+  buttonUpdate(data,currentData,xVariable,yVariable,colorVariable,sizeVariable);
 }
