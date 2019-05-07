@@ -121,10 +121,12 @@ var drawScatter = function(data,xVariable,yVariable,colorVariable,sizeVariable){
         .attr("opacity", 1);
 
       div.html("<b>" + d.Country + "</b>" +
-               "<br> Happiness Score: " + d[yVariable] +
-               "<br> GDP Per Capita: " + d[xVariable] +
-               "<br> Health (Life Expectancy): " + d[colorVariable] +
-               "<br> Freedom: " + d[sizeVariable])
+               "<br> Happiness Score: " + d.HappinessScore +
+               "<br> GDP Per Capita: " + d.Economy +
+               "<br> Health (Life Expectancy): " + d.Health +
+               "<br> Freedom: " + d.Freedom +
+               "<br> Generosity: " + d.Generosity +
+               "<br> Trust In Gov't: " + d.TrustInGovernment)
          .style("display","inline-block");
     })
     .on("mouseout",function(d){
@@ -142,11 +144,13 @@ var drawScatter = function(data,xVariable,yVariable,colorVariable,sizeVariable){
                 .scale(yScale);
 
   svg.append("g")
+     .attr("id","xAxisGroup")
      .attr("class","axis")
      .attr("transform", "translate(0," + (height - padding.bottom) + ")")
      .call(xAxis);
 
   svg.append("g")
+     .attr("id","yAxisGroup")
      .attr("class","axis")
      .attr("transform", "translate(" + padding.left + ",0)")
      .call(yAxis);
@@ -188,6 +192,153 @@ var buttonUpdate = function(data,currentData,xVariable,yVariable,colorVariable,s
     .on("click",function(d){
       drawUpdate(data,data[2],xVariable,yVariable,colorVariable,sizeVariable)
     })
+
+  d3.select(".xValueForm")
+    .on("change",function(d){
+      var selectX = document.getElementById("xValueSelect")
+      var newX = selectX.options[selectX.selectedIndex].value;
+      console.log(newX)
+      changeValue(data,currentData,newX,yVariable,colorVariable,sizeVariable)
+    })
+
+  d3.select(".yValueForm")
+    .on("change",function(d){
+      var selectY = document.getElementById("yValueSelect")
+      var newY = selectY.options[selectY.selectedIndex].value;
+      console.log(newY)
+      changeValue(data,currentData,xVariable,newY,colorVariable,sizeVariable)
+    })
+
+  d3.select(".sizeValueForm")
+    .on("change",function(d){
+      var selectSize = document.getElementById("sizeValueSelect")
+      var newSize = selectSize.options[selectSize.selectedIndex].value;
+      console.log(newSize)
+      changeValue(data,currentData,xVariable,yVariable,colorVariable,newSize)
+    })
+
+  d3.select(".colorValueForm")
+    .on("change",function(d){
+      var selectColor = document.getElementById("colorValueSelect")
+      var newColor = selectColor.options[selectColor.selectedIndex].value;
+      console.log(newColor)
+      changeValue(data,currentData,xVariable,yVariable,newColor,sizeVariable)
+    })
+}
+
+var changeValue = function(data,currentData,xVariable,yVariable,colorVariable,sizeVariable){
+  var svg = d3.select("svg");
+
+  var xMin = d3.min(currentData.map(function(d){
+    return d[xVariable];
+  }));
+
+  var xMax = d3.max(currentData.map(function(d){
+    return d[xVariable];
+  }));
+
+  var xScale = d3.scaleLinear() // GDP Per Capita
+                 .domain([xMin,xMax])
+                 .range([padding.left, width - padding.right]);
+
+  var yMin = d3.min(currentData.map(function(d){
+    return d[yVariable];
+  }));
+
+  var yMax = d3.max(currentData.map(function(d){
+    return d[yVariable];
+  }));
+
+  var yScale = d3.scaleLinear()
+                 .domain([yMin,yMax])
+                 .range([height - padding.bottom, padding.top]);
+
+  var colorMin = d3.min(currentData.map(function(d){
+    return d[colorVariable];
+  }));
+
+  var colorMax = d3.max(currentData.map(function(d){
+    return d[colorVariable];
+  }));
+
+  var colorScale = d3.scaleLinear()
+                     .domain([colorMin,colorMax])
+                     .range(["red","green"]);
+
+  var sizeMin = d3.min(currentData.map(function(d){
+    return d[sizeVariable];
+  }));
+
+  var sizeMax = d3.max(currentData.map(function(d){
+    return d[sizeVariable];
+  }));
+
+  var sizeScale = d3.scaleLinear()
+                    .domain([sizeMin,sizeMax])
+                    .range([5,15]);
+
+  var div = d3.select("div.info");
+
+  var circles = d3.selectAll("circle")
+                  .data(currentData,function(d){return d.Country})
+
+  circles.on("mouseover",function(d){
+            d3.selectAll("circle")
+              .transition()
+              .duration(400)
+              .attr("opacity", 0.2);
+
+            d3.select(this)
+              .transition()
+              .duration(400)
+              .attr("r",function(d){return 1.5 * sizeScale(d[sizeVariable])})
+              .attr("opacity", 1);
+
+            div.html("<b>" + d.Country + "</b>" +
+                     "<br> Happiness Score: " + d.HappinessScore +
+                     "<br> GDP Per Capita: " + d.Economy +
+                     "<br> Health (Life Expectancy): " + d.Health +
+                     "<br> Freedom: " + d.Freedom +
+                     "<br> Generosity: " + d.Generosity +
+                     "<br> Trust In Gov't: " + d.TrustInGovernment)
+               .style("display","inline-block");
+            })
+         .on("mouseout",function(d){
+             d3.selectAll("circle")
+               .transition()
+               .duration(200)
+               .attr("r",function(d){return sizeScale(d[sizeVariable])})
+               .attr("opacity", 0.7);
+        })
+
+  circles.transition()
+         .duration(600)
+         .ease(d3.easeCubicInOut)
+         .attr("cx",function(d){return xScale(d[xVariable]);})
+         .attr("cy",function(d){return yScale(d[yVariable]);})
+         .attr("r",function(d){return sizeScale(d[sizeVariable])})
+         .attr("fill",function(d){return colorScale(d[colorVariable])});
+
+   var xAxis = d3.axisBottom()
+                 .scale(xScale);
+
+   var yAxis = d3.axisLeft()
+                 .scale(yScale);
+
+  svg.select("#xAxisGroup")
+     .transition()
+     .duration(600)
+     .ease(d3.easeCubicInOut)
+     .call(xAxis);
+
+  svg.select("#yAxisGroup")
+     .transition()
+     .duration(600)
+     .ease(d3.easeCubicInOut)
+     .call(yAxis);
+     
+  buttonUpdate(data,currentData,xVariable,yVariable,colorVariable,sizeVariable);
+
 }
 
 var showRegion = function(data,id,currentData,xVariable,yVariable,colorVariable,sizeVariable,currentRegion){
@@ -409,10 +560,12 @@ var drawUpdate = function(data,currentData,xVariable,yVariable,colorVariable,siz
                        .attr("opacity", 1);
 
                      div.html("<b>" + d.Country + "</b>" +
-                              "<br> Happiness Score: " + d[yVariable] +
-                              "<br> GDP Per Capita: " + d[xVariable] +
-                              "<br> Health (Life Expectancy): " + d[colorVariable] +
-                              "<br> Freedom: " + d[sizeVariable])
+                              "<br> Happiness Score: " + d.HappinessScore +
+                              "<br> GDP Per Capita: " + d.Economy +
+                              "<br> Health (Life Expectancy): " + d.Health +
+                              "<br> Freedom: " + d.Freedom +
+                              "<br> Generosity: " + d.Generosity +
+                              "<br> Trust In Gov't: " + d.TrustInGovernment)
                         .style("display","inline-block");
                    })
                    .on("mouseout",function(d){
