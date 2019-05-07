@@ -40,6 +40,8 @@ circle {
 }
 
 div.info {
+  position: absolute;
+  left: 720px;
   font-size: 25px;
   background-color: #a1dd70;
   border: 3px solid black;
